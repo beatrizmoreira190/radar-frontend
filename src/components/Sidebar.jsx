@@ -1,0 +1,17 @@
+import { Link } from "react-router-dom";
+
+export default function Sidebar() {
+  return (
+    <div className="w-64 bg-white shadow-lg h-screen p-6">
+      <h1 className="text-xl font-bold mb-8">Radar Inteligente</h1>
+
+      <nav className="flex flex-col gap-4">
+        <Link to="/dashboard" className="hover:text-blue-600">Dashboard</Link>
+        <Link to="/licitacoes" className="hover:text-blue-600">Licitações</Link>
+        <Link to="/catalogo" className="hover:text-blue-600">Catálogo</Link>
+        <Link to="/relatorios" className="hover:text-blue-600">Relatórios</Link>
+        <Link to="/notificacoes" className="hover:text-blue-600">Notificações</Link>
+      </nav>
+    </div>
+  );
+}
