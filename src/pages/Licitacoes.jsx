@@ -33,14 +33,26 @@ export default function Licitacoes() {
     );
   }
 
-  const filtrados = dados.filter((item) => {
-    const texto =
-      `${item.objeto || ""} ${item.orgaoEntidade || ""} ${
-        item.modalidadeNome || ""
-      }`.toLowerCase();
+  // 🔄 CONVERSÃO DOS CAMPOS DO PNCP → CAMPOS DO FRONTEND
+  const dadosConvertidos = dados.map((item) => ({
+    orgao: item.orgaoEntidade?.razaoSocial || "—",
+    objeto: item.descricao || "—",
+    modalidade:
+      item.modalidade == 6
+        ? "Pregão Eletrônico"
+        : item.modalidade == 1
+        ? "Concorrência"
+        : "Outras",
+    dataPublicacao: item.dataPublicacaoPncp || "—",
+    uf: item.orgaoEntidade?.uf || "", // Se existir no JSON
+  }));
+
+  // 🔎 FILTROS
+  const filtrados = dadosConvertidos.filter((item) => {
+    const texto = `${item.objeto} ${item.orgao} ${item.modalidade}`.toLowerCase();
 
     const buscaOK = texto.includes(busca.toLowerCase());
-    const modOK = modalidade ? item.modalidadeNome === modalidade : true;
+    const modOK = modalidade ? item.modalidade === modalidade : true;
     const ufOK = uf ? item.uf === uf : true;
 
     return buscaOK && modOK && ufOK;
@@ -96,10 +108,10 @@ export default function Licitacoes() {
         <tbody>
           {filtrados.map((l, i) => (
             <tr key={i} className="border-b hover:bg-gray-50">
-              <td className="p-3">{l.orgaoEntidade}</td>
+              <td className="p-3">{l.orgao}</td>
               <td className="p-3">{l.objeto}</td>
-              <td className="p-3">{l.modalidadeNome}</td>
-              <td className="p-3">{l.dataPublicacaoPncp}</td>
+              <td className="p-3">{l.modalidade}</td>
+              <td className="p-3">{l.dataPublicacao}</td>
             </tr>
           ))}
         </tbody>
