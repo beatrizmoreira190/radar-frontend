@@ -9,15 +9,20 @@ export default function Licitacoes() {
   const [modalidade, setModalidade] = useState("");
   const [uf, setUf] = useState("");
 
+  const API = "https://radar-backend-c3p5.onrender.com";
+
   useEffect(() => {
     axios
-      .get("https://radar-backend-c3p5.onrender.com/licitacoes/coletar")
+      .get(`${API}/licitacoes/coletar_licitacoes`)
       .then((res) => {
-        const lista = res.data.dados || [];
+        const lista = res.data?.dados || [];
         setDados(lista);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("Erro ao carregar licitações:", err);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
@@ -30,15 +35,20 @@ export default function Licitacoes() {
 
   const filtrados = dados.filter((item) => {
     const texto =
-      `${item.objeto} ${item.orgaoEntidade} ${item.modalidadeNome}`.toLowerCase();
+      `${item.objeto || ""} ${item.orgaoEntidade || ""} ${
+        item.modalidadeNome || ""
+      }`.toLowerCase();
+
     const buscaOK = texto.includes(busca.toLowerCase());
     const modOK = modalidade ? item.modalidadeNome === modalidade : true;
     const ufOK = uf ? item.uf === uf : true;
+
     return buscaOK && modOK && ufOK;
   });
 
   return (
     <Layout titulo="Licitações">
+
       {/* BUSCA */}
       <input
         type="text"
