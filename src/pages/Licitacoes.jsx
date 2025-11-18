@@ -13,7 +13,7 @@ export default function Licitacoes() {
 
   useEffect(() => {
     axios
-      .get(`${API}/licitacoes/coletar_licitacoes`)
+      .get(`${API}/licitacoes/coletar`)
       .then((res) => {
         const lista = res.data?.dados || [];
         setDados(lista);
