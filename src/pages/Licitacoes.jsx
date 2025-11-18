@@ -8,8 +8,8 @@ export default function Licitacoes() {
   const [busca, setBusca] = useState("");
   const [modalidade, setModalidade] = useState("");
   const [uf, setUf] = useState("");
-  const [viewMode, setViewMode] = useState("table"); // "table" | "cards"
-  const [selecionada, setSelecionada] = useState(null); // para modal de detalhes
+  const [viewMode, setViewMode] = useState("table");
+  const [selecionada, setSelecionada] = useState(null);
 
   const API = "https://radar-backend-c3p5.onrender.com";
 
@@ -27,7 +27,7 @@ export default function Licitacoes() {
       });
   }, []);
 
-  // skeleton enquanto carrega
+  // SKELETON
   if (loading) {
     return (
       <Layout titulo="Licitações">
@@ -44,7 +44,7 @@ export default function Licitacoes() {
     );
   }
 
-  // 🔄 CONVERSÃO DOS CAMPOS DO PNCP → CAMPOS DO FRONTEND
+  // 🔄 Conversão dos dados do PNCP
   const dadosConvertidos = dados.map((item) => ({
     orgao: item.orgaoEntidade?.razaoSocial || "—",
     objeto: item.descricao || "—",
@@ -61,7 +61,7 @@ export default function Licitacoes() {
     raw: item,
   }));
 
-  // métricas rápidas (cards do topo)
+  // MÉTRICAS
   const total = dadosConvertidos.length;
   const totalPregao = dadosConvertidos.filter(
     (d) => d.modalidade === "Pregão Eletrônico"
@@ -70,7 +70,7 @@ export default function Licitacoes() {
     (d) => d.modalidade === "Concorrência"
   ).length;
 
-  // 🔎 FILTROS
+  // FILTROS
   const filtrados = dadosConvertidos.filter((item) => {
     const texto = `${item.objeto} ${item.orgao} ${item.modalidade}`.toLowerCase();
     const buscaOK = texto.includes(busca.toLowerCase());
@@ -81,9 +81,9 @@ export default function Licitacoes() {
 
   return (
     <Layout titulo="Licitações">
-      {/* CARDS DE MÉTRICAS */}
+      {/* METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
           <div className="text-xs font-medium text-gray-500">
             Licitações encontradas
           </div>
@@ -93,7 +93,7 @@ export default function Licitacoes() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
           <div className="text-xs font-medium text-gray-500">
             Pregões eletrônicos
           </div>
@@ -103,7 +103,7 @@ export default function Licitacoes() {
           <div className="text-xs text-gray-400 mt-1">Modalidade 6 – PNCP</div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
           <div className="text-xs font-medium text-gray-500">
             Concorrências / Outras
           </div>
@@ -119,20 +119,18 @@ export default function Licitacoes() {
         </div>
       </div>
 
-      {/* LINHA DE BUSCA + FILTROS + TOGGLE VIEW */}
+      {/* BUSCA / FILTROS / TOGGLE */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        {/* BUSCA */}
         <div className="flex-1">
           <input
             type="text"
             placeholder="Buscar por termo, órgão, modalidade..."
-            className="border border-gray-200 p-3 rounded-xl w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+            className="border border-gray-200 p-3 rounded-xl w-full shadow-sm focus:ring-2 focus:ring-indigo-500 text-sm"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
         </div>
 
-        {/* FILTROS */}
         <div className="flex gap-3">
           <select
             className="border border-gray-200 p-3 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
@@ -157,7 +155,6 @@ export default function Licitacoes() {
           </select>
         </div>
 
-        {/* TOGGLE VIEW */}
         <div className="flex bg-gray-100 rounded-full p-1 text-xs font-medium">
           <button
             className={`px-4 py-2 rounded-full transition ${
@@ -182,27 +179,27 @@ export default function Licitacoes() {
         </div>
       </div>
 
-      {/* CONTEÚDO PRINCIPAL: TABELA OU CARDS */}
+      {/* TABELA OU CARDS */}
       {filtrados.length === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-500 text-sm">
           Nenhuma licitação encontrada com os filtros atuais.
         </div>
       ) : viewMode === "table" ? (
-        // TABELA ESTILO FIGMA
+        /* === TABELA === */
         <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
                   Órgão
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
                   Objeto
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
                   Modalidade
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
                   Publicação
                 </th>
               </tr>
@@ -215,7 +212,7 @@ export default function Licitacoes() {
                   className="border-b last:border-none hover:bg-gray-50 transition cursor-pointer"
                   onClick={() => setSelecionada(l)}
                 >
-                  <td className="px-6 py-4 text-sm text-gray-800 font-medium">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-800">
                     {l.orgao}
                   </td>
 
@@ -232,8 +229,7 @@ export default function Licitacoes() {
                             : l.modalidade === "Concorrência"
                             ? "bg-green-100 text-green-700"
                             : "bg-gray-200 text-gray-700"
-                        }
-                      `}
+                        }`}
                     >
                       {l.modalidade}
                     </span>
@@ -248,69 +244,67 @@ export default function Licitacoes() {
           </table>
         </div>
       ) : (
-        {/* === CARDS FIGMA PREMIUM === */}
-<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-  {filtrados.map((l, i) => (
-    <div
-      key={i}
-      className="bg-white rounded-2xl border border-gray-200 shadow-sm 
-                 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer
-                 px-6 py-5 flex flex-col gap-4"
-      onClick={() => setSelecionada(l)}
-    >
-      {/* --- HEADER (ÓRGÃO + ÍCONE) --- */}
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-          <span className="text-lg text-gray-500">🏛️</span>
-        </div>
+        <>
+          {/* === CARDS FIGMA PREMIUM === */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filtrados.map((l, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm 
+                           hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer
+                           px-6 py-5 flex flex-col gap-4"
+                onClick={() => setSelecionada(l)}
+              >
+                {/* HEADER */}
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                    <span className="text-lg text-gray-500">🏛️</span>
+                  </div>
 
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-900 leading-tight">
-            {l.orgao}
-          </p>
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            Publicado via PNCP
-          </p>
-        </div>
-      </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">
+                      {l.orgao}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      Publicado via PNCP
+                    </p>
+                  </div>
+                </div>
 
-      {/* --- OBJETO (DESCRIÇÃO) --- */}
-      <div className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-        {l.objeto !== "—" ? l.objeto : "Descrição não informada"}
-      </div>
+                {/* DESCRIÇÃO */}
+                <div className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                  {l.objeto !== "—" ? l.objeto : "Descrição não informada"}
+                </div>
 
-      {/* DIVISOR */}
-      <div className="w-full h-px bg-gray-100" />
+                <div className="w-full h-px bg-gray-100" />
 
-      {/* --- FOOTER (BADGE + PUBLICAÇÃO) --- */}
-      <div className="flex items-center justify-between">
+                {/* FOOTER */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold
+                      ${
+                        l.modalidade === "Pregão Eletrônico"
+                          ? "bg-blue-100 text-blue-700"
+                          : l.modalidade === "Concorrência"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                  >
+                    {l.modalidade}
+                  </span>
 
-        {/* Badge de Modalidade */}
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold
-            ${
-              l.modalidade === "Pregão Eletrônico"
-                ? "bg-blue-100 text-blue-700"
-                : l.modalidade === "Concorrência"
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-200 text-gray-600"
-            }`}
-        >
-          {l.modalidade}
-        </span>
-
-        {/* Data */}
-        <span className="text-xs text-gray-500 whitespace-nowrap">
-          Publicação: <span className="font-medium">{l.dataPublicacao}</span>
-        </span>
-      </div>
-    </div>
-  ))}
-</div>
-
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                    Publicação:{" "}
+                    <span className="font-medium">{l.dataPublicacao}</span>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* MODAL SIMPLES DE DETALHES */}
+      {/* MODAL DE DETALHES */}
       {selecionada && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 relative">
