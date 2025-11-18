@@ -248,44 +248,66 @@ export default function Licitacoes() {
           </table>
         </div>
       ) : (
-        // CARDS
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtrados.map((l, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col justify-between hover:shadow-lg hover:-translate-y-0.5 transition cursor-pointer"
-              onClick={() => setSelecionada(l)}
-            >
-              <div className="mb-3">
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  {l.orgao}
-                </div>
-                <div className="mt-1 text-sm font-medium text-gray-900 line-clamp-2">
-                  {l.objeto}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mt-2">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold
-                    ${
-                      l.modalidade === "Pregão Eletrônico"
-                        ? "bg-blue-100 text-blue-700"
-                        : l.modalidade === "Concorrência"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-200 text-gray-700"
-                    }
-                  `}
-                >
-                  {l.modalidade}
-                </span>
-                <span className="text-xs text-gray-500">
-                  Publicação: {l.dataPublicacao}
-                </span>
-              </div>
-            </div>
-          ))}
+        {/* === CARDS FIGMA PREMIUM === */}
+<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+  {filtrados.map((l, i) => (
+    <div
+      key={i}
+      className="bg-white rounded-2xl border border-gray-200 shadow-sm 
+                 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer
+                 px-6 py-5 flex flex-col gap-4"
+      onClick={() => setSelecionada(l)}
+    >
+      {/* --- HEADER (ÓRGÃO + ÍCONE) --- */}
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+          <span className="text-lg text-gray-500">🏛️</span>
         </div>
+
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-gray-900 leading-tight">
+            {l.orgao}
+          </p>
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            Publicado via PNCP
+          </p>
+        </div>
+      </div>
+
+      {/* --- OBJETO (DESCRIÇÃO) --- */}
+      <div className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+        {l.objeto !== "—" ? l.objeto : "Descrição não informada"}
+      </div>
+
+      {/* DIVISOR */}
+      <div className="w-full h-px bg-gray-100" />
+
+      {/* --- FOOTER (BADGE + PUBLICAÇÃO) --- */}
+      <div className="flex items-center justify-between">
+
+        {/* Badge de Modalidade */}
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold
+            ${
+              l.modalidade === "Pregão Eletrônico"
+                ? "bg-blue-100 text-blue-700"
+                : l.modalidade === "Concorrência"
+                ? "bg-green-100 text-green-700"
+                : "bg-gray-200 text-gray-600"
+            }`}
+        >
+          {l.modalidade}
+        </span>
+
+        {/* Data */}
+        <span className="text-xs text-gray-500 whitespace-nowrap">
+          Publicação: <span className="font-medium">{l.dataPublicacao}</span>
+        </span>
+      </div>
+    </div>
+  ))}
+</div>
+
       )}
 
       {/* MODAL SIMPLES DE DETALHES */}
