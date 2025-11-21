@@ -14,30 +14,35 @@ export default function Licitacoes() {
   // BACKEND
   const API = "https://radar-backend-c3p5.onrender.com";
 
-  // ===== FUNÇÃO DE BUSCA MANUAL =====
-  const buscarLicitacoes = async () => {
-    setLoading(true);
+  // ===== FUNÇÃO DE BUSCA MANUAL (AGORA LENDO DO BANCO) =====
+const buscarLicitacoes = async () => {
+  setLoading(true);
 
-    try {
-      const params = new URLSearchParams({
-        data_inicial: "20240101",
-        data_final: "20241231",
-        codigo_modalidade: modalidade === "Pregão Eletrônico" ? 6 :
-                           modalidade === "Concorrência" ? 1 : 6, 
-        pagina: 1,
-        tamanho_pagina: 50
-      });
+  try {
+    const params = new URLSearchParams();
 
-      const res = await axios.get(`${API}/licitacoes/coletar?` + params.toString());
-
-      const lista = res.data?.dados || [];
-      setDados(lista);
-    } catch (err) {
-      console.error("Erro ao carregar licitações:", err);
+    if (modalidade) {
+      params.append("modalidade", modalidade);
     }
 
-    setLoading(false);
-  };
+    if (busca) {
+      params.append("busca", busca);
+    }
+
+    if (uf) {
+      params.append("uf", uf);
+    }
+
+    const res = await axios.get(`${API}/licitacoes/listar_banco?` + params.toString());
+    const lista = res.data?.dados || [];
+
+    setDados(lista);
+  } catch (err) {
+    console.error("Erro ao carregar licitações:", err);
+  }
+
+  setLoading(false);
+};
 
   // Buscar automáticamente na primeira carga
   useEffect(() => {
