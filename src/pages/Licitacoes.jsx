@@ -85,7 +85,7 @@ const dadosConvertidos = dados.map((item) => {
     amparoLegal,
     srp: raw.srp || false,
 
-    // Datas formatadas para exibir
+    // Datas formatadas para EXIBIR
     dataPublicacao: dataPublicacaoPncp
       ? new Date(dataPublicacaoPncp).toLocaleString("pt-BR")
       : "—",
@@ -106,34 +106,20 @@ const dadosConvertidos = dados.map((item) => {
     itens: raw.itens || [],
     anexos: raw.anexos || [],
 
-    // Guardamos o raw para ordenação
     raw,
+
+    // ⭐ CAMPO NOVO PARA ORDERNAR (data BRUTA REAL)
+    data_publicacao_bruta: item.data_publicacao,
   };
 });
 
 // ===== ORDENAR POR DATA MAIS RECENTE =====
 dadosConvertidos.sort((a, b) => {
-  const dataA = new Date(
-    a.raw.dataPublicacaoPncp ||
-    a.raw.data_publicacao ||
-    0
-  );
-
-  const dataB = new Date(
-    b.raw.dataPublicacaoPncp ||
-    b.raw.data_publicacao ||
-    0
-  );
-
+  const dataA = new Date(a.data_publicacao_bruta || 0);
+  const dataB = new Date(b.data_publicacao_bruta || 0);
   return dataB - dataA; // mais recente primeiro
 });
 
-  // ===== ORDENAR POR DATA MAIS RECENTE =====
-  dadosConvertidos.sort((a, b) => {
-    const dataA = new Date(a.raw.dataPublicacaoPncp || a.dataPublicacao || 0);
-    const dataB = new Date(b.raw.dataPublicacaoPncp || b.dataPublicacao || 0);
-    return dataB - dataA; // mais recente primeiro
-  });
 
   // ====== FILTROS LOCAIS ======
   const filtrados = dadosConvertidos.filter((item) => {
