@@ -127,18 +127,36 @@ const dadosConvertidos = dados.map((item) => {
     return buscaOK && modOK && ufOK;
   });
 
-  // ====== PAGINAÇÃO FRONT (ORDENANDO POR DATA MAIS RECENTE) ======
+  // ====== PAGINAÇÃO FRONT: ordenar antes, paginar depois ======
+
+// 1. Ordenar os dados filtrados por data bruta
 const ordenados = [...filtrados].sort((a, b) => {
   const dataA = new Date(a.data_publicacao_bruta || 0);
   const dataB = new Date(b.data_publicacao_bruta || 0);
   return dataB - dataA; // mais recente primeiro
 });
 
+// 2. Calcular total
 const totalRegistros = ordenados.length;
 const totalPaginas = Math.max(1, Math.ceil(totalRegistros / porPagina));
-const inicio = (pagina - 1) * porPagina;
+
+// 3. Garantir que a página atual não passe do limite
+const paginaCorrigida = Math.min(pagina, totalPaginas);
+if (paginaCorrigida !== pagina) {
+  setPagina(paginaCorrigida);
+}
+
+// 4. Cortar apenas os itens da página correta
+const inicio = (paginaCorrigida - 1) * porPagina;
 const fim = inicio + porPagina;
 const paginaAtual = ordenados.slice(inicio, fim);
+
+// 5. Botão para mudar de página
+const mudarPagina = (p) => {
+  if (p >= 1 && p <= totalPaginas) {
+    setPagina(p);
+  }
+};
 
   // ====== MÉTRICAS ======
   const totalPregao = filtrados.filter((d) =>
