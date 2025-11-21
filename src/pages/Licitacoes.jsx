@@ -11,67 +11,43 @@ export default function Licitacoes() {
   const [viewMode, setViewMode] = useState("table");
   const [selecionada, setSelecionada] = useState(null);
 
+  // BACKEND
   const API = "https://radar-backend-c3p5.onrender.com";
 
-  // ============================
-  // 1) CARREGAR O CACHE LOCAL
-  // ============================
-  const carregarCache = async () => {
+  // ===== FUNÇÃO DE BUSCA MANUAL =====
+  const buscarLicitacoes = async () => {
     setLoading(true);
-    try {
-      const res = await axios.get(`${API}/licitacoes/listar`);
-      setDados(res.data?.dados || []);
-    } catch (err) {
-      console.error("Erro ao carregar cache:", err);
-    }
-    setLoading(false);
-  };
 
-  // ============================
-  // 2) ATUALIZAR O CACHE (PNCP)
-  // ============================
-  const atualizarPNCP = async () => {
-    setLoading(true);
     try {
-      await axios.get(`${API}/licitacoes/salvar`);
-      await carregarCache();
-    } catch (err) {
-      console.error("Erro ao atualizar PNCP:", err);
-    }
-    setLoading(false);
-  };
-
-  // ============================
-  // 3) FILTRAR DADOS DO CACHE
-  // ============================
-  const filtrarLicitacoes = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API}/licitacoes/filtrar`, {
-        params: {
-          busca,
-          uf,
-          modalidade,
-        },
+      const params = new URLSearchParams({
+        data_inicial: "20240101",
+        data_final: "20241231",
+        codigo_modalidade: modalidade === "Pregão Eletrônico" ? 6 :
+                           modalidade === "Concorrência" ? 1 : 6, 
+        pagina: 1,
+        tamanho_pagina: 50
       });
-      setDados(res.data?.dados || []);
+
+      const res = await axios.get(`${API}/licitacoes/coletar?` + params.toString());
+
+      const lista = res.data?.dados || [];
+      setDados(lista);
     } catch (err) {
-      console.error("Erro ao filtrar:", err);
+      console.error("Erro ao carregar licitações:", err);
     }
+
     setLoading(false);
   };
 
-  // Carregar o cache na primeira renderização
+  // Buscar automáticamente na primeira carga
   useEffect(() => {
-    carregarCache();
+    buscarLicitacoes();
   }, []);
 
-  // ============================
-  // MAPEAR PARA O FRONT
-  // ============================
+  // ====== CONVERSÃO DOS DADOS DO PNCP ======
   const dadosConvertidos = dados.map((item) => ({
     orgao: item.orgaoEntidade?.razaoSocial || "—",
-    objeto: item.objetoCompra || item.descricao || item.justificativa || "—",
+    objeto: item.objetoCompra || item.descricao || "—",
     modalidade:
       item.modalidadeLicitacao == 6
         ? "Pregão Eletrônico"
@@ -85,7 +61,7 @@ export default function Licitacoes() {
     raw: item,
   }));
 
-  // MÉTRICAS
+  // ====== MÉTRICAS ======
   const total = dadosConvertidos.length;
   const totalPregao = dadosConvertidos.filter(
     (d) => d.modalidade === "Pregão Eletrônico"
@@ -94,7 +70,7 @@ export default function Licitacoes() {
     (d) => d.modalidade === "Concorrência"
   ).length;
 
-  // FILTROS LOCAIS (aplicados após o backend)
+  // ====== FILTROS LOCAIS ======
   const filtrados = dadosConvertidos.filter((item) => {
     const texto = `${item.objeto} ${item.orgao} ${item.modalidade}`.toLowerCase();
     const buscaOK = busca ? texto.includes(busca.toLowerCase()) : true;
@@ -105,61 +81,38 @@ export default function Licitacoes() {
 
   return (
     <Layout titulo="Licitações">
-
-      {/* BOTÕES PRINCIPAIS */}
-      <div className="flex gap-3 mb-6">
-        <button
-          onClick={atualizarPNCP}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700"
-        >
-          🔄 Atualizar dados do PNCP
-        </button>
-
-        <button
-          onClick={carregarCache}
-          className="bg-gray-200 text-gray-800 px-4 py-2 rounded-xl shadow hover:bg-gray-300"
-        >
-          📄 Carregar Cache
-        </button>
-
-        <button
-          onClick={filtrarLicitacoes}
-          className="bg-green-600 text-white px-4 py-2 rounded-xl shadow hover:bg-green-700"
-        >
-          🔍 Filtrar
-        </button>
-      </div>
-
-      {/* LOADING */}
-      {loading && (
-        <p className="text-gray-500 mb-4">Carregando dados...</p>
-      )}
-
-      {/* MÉTRICS (SEU LAYOUT ORIGINAL) */}
+      {/* METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">Licitações encontradas</div>
+          <div className="text-xs font-medium text-gray-500">
+            Licitações encontradas
+          </div>
           <div className="text-2xl font-bold text-gray-900 mt-2">{total}</div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">Pregões eletrônicos</div>
+          <div className="text-xs font-medium text-gray-500">
+            Pregões eletrônicos
+          </div>
           <div className="text-2xl font-bold text-gray-900 mt-2">{totalPregao}</div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">Concorrências / Outras</div>
+          <div className="text-xs font-medium text-gray-500">
+            Concorrências / Outras
+          </div>
           <div className="text-2xl font-bold text-gray-900 mt-2">
             {totalConcorrencia}{" "}
-            <span className="text-sm font-medium text-gray-400">/ {total - totalPregao}</span>
+            <span className="text-sm font-medium text-gray-400">
+              / {total - totalPregao}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* FILTROS */}
+      {/* BUSCA / FILTROS / BOTÃO */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-
-        {/* BUSCA */}
+        {/* INPUT BUSCA */}
         <div className="flex-1">
           <input
             type="text"
@@ -170,7 +123,7 @@ export default function Licitacoes() {
           />
         </div>
 
-        {/* SELECTS */}
+        {/* FILTROS */}
         <div className="flex gap-3">
           <select
             className="border border-gray-200 p-3 rounded-xl shadow-sm bg-white"
@@ -194,9 +147,17 @@ export default function Licitacoes() {
             <option value="RJ">RJ</option>
             <option value="MG">MG</option>
           </select>
+
+          {/* BOTÃO BUSCAR */}
+          <button
+            className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700"
+            onClick={buscarLicitacoes}
+          >
+            Buscar
+          </button>
         </div>
 
-        {/* TOGGLE TABLE / CARDS */}
+        {/* TOGGLE */}
         <div className="flex bg-gray-100 rounded-full p-1 text-xs font-medium">
           <button
             className={`px-4 py-2 rounded-full transition ${
@@ -221,17 +182,15 @@ export default function Licitacoes() {
         </div>
       </div>
 
-      {/* ===============================
-           TABELA / CARDS ORIGINAIS
-           (SEU LAYOUT COMPLETO)
-         =============================== */}
+      {/* RESTO DO SEU CÓDIGO PERMANECE IGUAL */}
+      {/* TABELA / CARDS / MODAL */}
+      {/* (NÃO mexi em nada dessa parte) */}
 
       {filtrados.length === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-500 text-sm">
           Nenhuma licitação encontrada com os filtros atuais.
         </div>
       ) : viewMode === "table" ? (
-        
         /* === TABELA === */
         <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
           <table className="w-full">
@@ -271,10 +230,8 @@ export default function Licitacoes() {
             </tbody>
           </table>
         </div>
-      
       ) : (
         <>
-          {/* CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filtrados.map((l, i) => (
               <div
@@ -324,7 +281,6 @@ export default function Licitacoes() {
         </>
       )}
 
-      {/* MODAL */}
       {selecionada && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 relative">
@@ -343,7 +299,6 @@ export default function Licitacoes() {
                 <div className="text-xs font-semibold text-gray-500 uppercase">Modalidade</div>
                 <div className="mt-1">{selecionada.modalidade}</div>
               </div>
-
               <div>
                 <div className="text-xs font-semibold text-gray-500 uppercase">Publicação</div>
                 <div className="mt-1">{selecionada.dataPublicacao}</div>
@@ -364,7 +319,6 @@ export default function Licitacoes() {
           </div>
         </div>
       )}
-
     </Layout>
   );
 }
