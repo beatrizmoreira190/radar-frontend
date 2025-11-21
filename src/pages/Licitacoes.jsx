@@ -46,69 +46,87 @@ export default function Licitacoes() {
     buscarLicitacoes();
   }, []);
 
-  // ====== CONVERSÃO DOS DADOS (USANDO json_raw) ======
-  const dadosConvertidos = dados.map((item) => {
-    const raw = item.json_raw || {};
+// ====== CONVERSÃO DOS DADOS (USANDO json_raw) ======
+const dadosConvertidos = dados.map((item) => {
+  const raw = item.json_raw || {};
 
-    const orgaoEntidade = raw.orgaoEntidade || {};
-    const unidadeOrgao = raw.unidadeOrgao || {};
-    const amparoLegal = raw.amparoLegal || {};
+  const orgaoEntidade = raw.orgaoEntidade || {};
+  const unidadeOrgao = raw.unidadeOrgao || {};
+  const amparoLegal = raw.amparoLegal || {};
 
-    const situacaoCompraNome = raw.situacaoCompraNome || "—";
-    const modalidadeNome = raw.modalidadeNome || item.modalidade || "—";
-    const modoDisputaNome = raw.modoDisputaNome || "—";
+  const situacaoCompraNome = raw.situacaoCompraNome || "—";
+  const modalidadeNome = raw.modalidadeNome || item.modalidade || "—";
+  const modoDisputaNome = raw.modoDisputaNome || "—";
 
-    const dataPublicacaoPncp = raw.dataPublicacaoPncp || item.data_publicacao;
-    const dataAberturaProposta =
-      raw.dataAberturaProposta || item.data_abertura;
-    const dataEncerramentoProposta = raw.dataEncerramentoProposta || null;
+  const dataPublicacaoPncp = raw.dataPublicacaoPncp || item.data_publicacao;
+  const dataAberturaProposta = raw.dataAberturaProposta || item.data_abertura;
+  const dataEncerramentoProposta = raw.dataEncerramentoProposta || null;
 
-    const valorTotalEstimado = raw.valorTotalEstimado || null;
+  const valorTotalEstimado = raw.valorTotalEstimado || null;
 
-    return {
-      orgao: orgaoEntidade.razaoSocial || item.orgao || "—",
-      cnpj: orgaoEntidade.cnpj || "—",
-      unidade: unidadeOrgao.nomeUnidade || "—",
-      municipio: unidadeOrgao.municipioNome || item.municipio || "—",
-      ufSigla: unidadeOrgao.ufSigla || item.uf || "—",
-      ibge: unidadeOrgao.codigoIbge || null,
+  return {
+    orgao: orgaoEntidade.razaoSocial || item.orgao || "—",
+    cnpj: orgaoEntidade.cnpj || "—",
+    unidade: unidadeOrgao.nomeUnidade || "—",
+    municipio: unidadeOrgao.municipioNome || item.municipio || "—",
+    ufSigla: unidadeOrgao.ufSigla || item.uf || "—",
+    ibge: unidadeOrgao.codigoIbge || null,
 
-      objeto: raw.objetoCompra || item.objeto || "—",
+    objeto: raw.objetoCompra || item.objeto || "—",
 
-      numeroCompra: raw.numeroCompra || item.numero || "—",
-      processo: raw.processo || null,
-      idPNCP: raw.numeroControlePNCP || item.id_externo || "—",
+    numeroCompra: raw.numeroCompra || item.numero || "—",
+    processo: raw.processo || null,
+    idPNCP: raw.numeroControlePNCP || item.id_externo || "—",
 
-      modalidadeNome,
-      situacao: situacaoCompraNome,
-      disputa: modoDisputaNome,
+    modalidadeNome,
+    situacao: situacaoCompraNome,
+    disputa: modoDisputaNome,
 
-      amparoLegal,
-      srp: raw.srp || false,
+    amparoLegal,
+    srp: raw.srp || false,
 
-      dataPublicacao: dataPublicacaoPncp
-        ? new Date(dataPublicacaoPncp).toLocaleString("pt-BR")
-        : "—",
-      dataAbertura: dataAberturaProposta
-        ? new Date(dataAberturaProposta).toLocaleString("pt-BR")
-        : "—",
-      dataEncerramento: dataEncerramentoProposta
-        ? new Date(dataEncerramentoProposta).toLocaleString("pt-BR")
-        : "—",
+    // Datas formatadas para exibir
+    dataPublicacao: dataPublicacaoPncp
+      ? new Date(dataPublicacaoPncp).toLocaleString("pt-BR")
+      : "—",
+    dataAbertura: dataAberturaProposta
+      ? new Date(dataAberturaProposta).toLocaleString("pt-BR")
+      : "—",
+    dataEncerramento: dataEncerramentoProposta
+      ? new Date(dataEncerramentoProposta).toLocaleString("pt-BR")
+      : "—",
 
-      valorEstimado: valorTotalEstimado
-        ? `R$ ${valorTotalEstimado.toLocaleString("pt-BR")}`
-        : "—",
+    valorEstimado: valorTotalEstimado
+      ? `R$ ${valorTotalEstimado.toLocaleString("pt-BR")}`
+      : "—",
 
-      link: raw.linkSistemaOrigem || item.url_externa || null,
-      informacaoComplementar: raw.informacaoComplementar || null,
+    link: raw.linkSistemaOrigem || item.url_externa || null,
+    informacaoComplementar: raw.informacaoComplementar || null,
 
-      itens: raw.itens || [],
-      anexos: raw.anexos || [],
+    itens: raw.itens || [],
+    anexos: raw.anexos || [],
 
-      raw,
-    };
-  });
+    // Guardamos o raw para ordenação
+    raw,
+  };
+});
+
+// ===== ORDENAR POR DATA MAIS RECENTE =====
+dadosConvertidos.sort((a, b) => {
+  const dataA = new Date(
+    a.raw.dataPublicacaoPncp ||
+    a.raw.data_publicacao ||
+    0
+  );
+
+  const dataB = new Date(
+    b.raw.dataPublicacaoPncp ||
+    b.raw.data_publicacao ||
+    0
+  );
+
+  return dataB - dataA; // mais recente primeiro
+});
 
   // ===== ORDENAR POR DATA MAIS RECENTE =====
   dadosConvertidos.sort((a, b) => {
