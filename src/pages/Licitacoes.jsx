@@ -106,20 +106,13 @@ const dadosConvertidos = dados.map((item) => {
     itens: raw.itens || [],
     anexos: raw.anexos || [],
 
+    // Guardamos o raw caso precise
     raw,
 
-    // ⭐ CAMPO NOVO PARA ORDERNAR (data BRUTA REAL)
+    // ⭐ CAMPO NOVO: data bruta que veio do backend
     data_publicacao_bruta: item.data_publicacao,
   };
 });
-
-// ===== ORDENAR POR DATA MAIS RECENTE =====
-dadosConvertidos.sort((a, b) => {
-  const dataA = new Date(a.data_publicacao_bruta || 0);
-  const dataB = new Date(b.data_publicacao_bruta || 0);
-  return dataB - dataA; // mais recente primeiro
-});
-
 
   // ====== FILTROS LOCAIS ======
   const filtrados = dadosConvertidos.filter((item) => {
@@ -134,17 +127,18 @@ dadosConvertidos.sort((a, b) => {
     return buscaOK && modOK && ufOK;
   });
 
-  // ====== PAGINAÇÃO FRONT ======
-  const totalRegistros = filtrados.length;
-  const totalPaginas = Math.max(1, Math.ceil(totalRegistros / porPagina));
-  const inicio = (pagina - 1) * porPagina;
-  const fim = inicio + porPagina;
-  const paginaAtual = filtrados.slice(inicio, fim);
+  // ====== PAGINAÇÃO FRONT (ORDENANDO POR DATA MAIS RECENTE) ======
+const ordenados = [...filtrados].sort((a, b) => {
+  const dataA = new Date(a.data_publicacao_bruta || 0);
+  const dataB = new Date(b.data_publicacao_bruta || 0);
+  return dataB - dataA; // mais recente primeiro
+});
 
-  const mudarPagina = (nova) => {
-    if (nova < 1 || nova > totalPaginas) return;
-    setPagina(nova);
-  };
+const totalRegistros = ordenados.length;
+const totalPaginas = Math.max(1, Math.ceil(totalRegistros / porPagina));
+const inicio = (pagina - 1) * porPagina;
+const fim = inicio + porPagina;
+const paginaAtual = ordenados.slice(inicio, fim);
 
   // ====== MÉTRICAS ======
   const totalPregao = filtrados.filter((d) =>
