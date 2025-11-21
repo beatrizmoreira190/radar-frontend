@@ -14,66 +14,56 @@ export default function Licitacoes() {
   // BACKEND
   const API = "https://radar-backend-c3p5.onrender.com";
 
-  // ===== FUNÇÃO DE BUSCA MANUAL (AGORA LENDO DO BANCO) =====
-const buscarLicitacoes = async () => {
-  setLoading(true);
+  // ===== FUNÇÃO DE BUSCA (BANCO) =====
+  const buscarLicitacoes = async () => {
+    setLoading(true);
 
-  try {
-    const params = new URLSearchParams();
+    try {
+      const params = new URLSearchParams();
 
-    if (modalidade) {
-      params.append("modalidade", modalidade);
+      if (modalidade) params.append("modalidade", modalidade);
+      if (busca) params.append("busca", busca);
+      if (uf) params.append("uf", uf);
+
+      const res = await axios.get(`${API}/licitacoes/listar_banco?` + params.toString());
+      const lista = res.data?.dados || [];
+
+      setDados(lista);
+    } catch (err) {
+      console.error("Erro ao carregar licitações:", err);
     }
 
-    if (busca) {
-      params.append("busca", busca);
-    }
+    setLoading(false);
+  };
 
-    if (uf) {
-      params.append("uf", uf);
-    }
-
-    const res = await axios.get(`${API}/licitacoes/listar_banco?` + params.toString());
-    const lista = res.data?.dados || [];
-
-    setDados(lista);
-  } catch (err) {
-    console.error("Erro ao carregar licitações:", err);
-  }
-
-  setLoading(false);
-};
-
-  // Buscar automáticamente na primeira carga
+  // Buscar na primeira carga
   useEffect(() => {
     buscarLicitacoes();
   }, []);
 
-  // ====== CONVERSÃO DOS DADOS DO PNCP ======
+  // ====== CONVERSÃO DOS DADOS DO BANCO ======
   const dadosConvertidos = dados.map((item) => ({
-    orgao: item.orgaoEntidade?.razaoSocial || "—",
-    objeto: item.objetoCompra || item.descricao || "—",
+    orgao: item.orgao || "—",
+    objeto: item.objeto || "—",
     modalidade:
-      item.modalidadeLicitacao == 6
+      item.modalidade === "6" || item.modalidade === 6
         ? "Pregão Eletrônico"
-        : item.modalidadeLicitacao == 1
+        : item.modalidade === "1" || item.modalidade === 1
         ? "Concorrência"
+        : item.modalidade && item.modalidade !== "None"
+        ? item.modalidade
         : "Outras",
-    dataPublicacao: item.dataPublicacaoPncp
-      ? new Date(item.dataPublicacaoPncp).toLocaleDateString("pt-BR")
+    dataPublicacao: item.data_publicacao
+      ? new Date(item.data_publicacao).toLocaleDateString("pt-BR")
       : "—",
-    uf: item.orgaoEntidade?.uf || "",
+    uf: item.uf || "",
     raw: item,
   }));
 
   // ====== MÉTRICAS ======
   const total = dadosConvertidos.length;
-  const totalPregao = dadosConvertidos.filter(
-    (d) => d.modalidade === "Pregão Eletrônico"
-  ).length;
-  const totalConcorrencia = dadosConvertidos.filter(
-    (d) => d.modalidade === "Concorrência"
-  ).length;
+  const totalPregao = dadosConvertidos.filter((d) => d.modalidade === "Pregão Eletrônico").length;
+  const totalConcorrencia = dadosConvertidos.filter((d) => d.modalidade === "Concorrência").length;
 
   // ====== FILTROS LOCAIS ======
   const filtrados = dadosConvertidos.filter((item) => {
@@ -89,35 +79,26 @@ const buscarLicitacoes = async () => {
       {/* METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">
-            Licitações encontradas
-          </div>
+          <div className="text-xs font-medium text-gray-500">Licitações encontradas</div>
           <div className="text-2xl font-bold text-gray-900 mt-2">{total}</div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">
-            Pregões eletrônicos
-          </div>
+          <div className="text-xs font-medium text-gray-500">Pregões eletrônicos</div>
           <div className="text-2xl font-bold text-gray-900 mt-2">{totalPregao}</div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">
-            Concorrências / Outras
-          </div>
+          <div className="text-xs font-medium text-gray-500">Concorrências / Outras</div>
           <div className="text-2xl font-bold text-gray-900 mt-2">
             {totalConcorrencia}{" "}
-            <span className="text-sm font-medium text-gray-400">
-              / {total - totalPregao}
-            </span>
+            <span className="text-sm font-medium text-gray-400">/ {total - totalPregao}</span>
           </div>
         </div>
       </div>
 
       {/* BUSCA / FILTROS / BOTÃO */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        {/* INPUT BUSCA */}
         <div className="flex-1">
           <input
             type="text"
@@ -128,7 +109,6 @@ const buscarLicitacoes = async () => {
           />
         </div>
 
-        {/* FILTROS */}
         <div className="flex gap-3">
           <select
             className="border border-gray-200 p-3 rounded-xl shadow-sm bg-white"
@@ -153,7 +133,6 @@ const buscarLicitacoes = async () => {
             <option value="MG">MG</option>
           </select>
 
-          {/* BOTÃO BUSCAR */}
           <button
             className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700"
             onClick={buscarLicitacoes}
@@ -162,13 +141,10 @@ const buscarLicitacoes = async () => {
           </button>
         </div>
 
-        {/* TOGGLE */}
         <div className="flex bg-gray-100 rounded-full p-1 text-xs font-medium">
           <button
             className={`px-4 py-2 rounded-full transition ${
-              viewMode === "table"
-                ? "bg-white shadow-sm text-gray-900"
-                : "text-gray-500"
+              viewMode === "table" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
             }`}
             onClick={() => setViewMode("table")}
           >
@@ -176,9 +152,7 @@ const buscarLicitacoes = async () => {
           </button>
           <button
             className={`px-4 py-2 rounded-full transition ${
-              viewMode === "cards"
-                ? "bg-white shadow-sm text-gray-900"
-                : "text-gray-500"
+              viewMode === "cards" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
             }`}
             onClick={() => setViewMode("cards")}
           >
@@ -187,16 +161,12 @@ const buscarLicitacoes = async () => {
         </div>
       </div>
 
-      {/* RESTO DO SEU CÓDIGO PERMANECE IGUAL */}
-      {/* TABELA / CARDS / MODAL */}
-      {/* (NÃO mexi em nada dessa parte) */}
-
+      {/* TABELA OU CARDS */}
       {filtrados.length === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-500 text-sm">
           Nenhuma licitação encontrada com os filtros atuais.
         </div>
       ) : viewMode === "table" ? (
-        /* === TABELA === */
         <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
@@ -218,13 +188,15 @@ const buscarLicitacoes = async () => {
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">{l.orgao}</td>
                   <td className="px-6 py-4 text-sm text-gray-600 max-w-xl truncate">{l.objeto}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold
-                      ${l.modalidade === "Pregão Eletrônico"
-                        ? "bg-blue-100 text-blue-700"
-                        : l.modalidade === "Concorrência"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-200 text-gray-700"
-                      }`}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold
+                        ${
+                          l.modalidade === "Pregão Eletrônico"
+                            ? "bg-blue-100 text-blue-700"
+                            : l.modalidade === "Concorrência"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
                     >
                       {l.modalidade}
                     </span>
@@ -236,56 +208,54 @@ const buscarLicitacoes = async () => {
           </table>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filtrados.map((l, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm 
-                           hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer
-                           px-6 py-5 flex flex-col gap-4"
-                onClick={() => setSelecionada(l)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <span className="text-lg text-gray-500">🏛️</span>
-                  </div>
-
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 leading-tight">{l.orgao}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Publicado via PNCP</p>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filtrados.map((l, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer px-6 py-5 flex flex-col gap-4"
+              onClick={() => setSelecionada(l)}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <span className="text-lg text-gray-500">🏛️</span>
                 </div>
 
-                <div className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                  {l.objeto !== "—" ? l.objeto : "Descrição não informada"}
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900 leading-tight">{l.orgao}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Publicado via PNCP</p>
                 </div>
+              </div>
 
-                <div className="w-full h-px bg-gray-100" />
+              <div className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                {l.objeto !== "—" ? l.objeto : "Descrição não informada"}
+              </div>
 
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold
-                      ${l.modalidade === "Pregão Eletrônico"
+              <div className="w-full h-px bg-gray-100" />
+
+              <div className="flex items-center justify-between">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold
+                    ${
+                      l.modalidade === "Pregão Eletrônico"
                         ? "bg-blue-100 text-blue-700"
                         : l.modalidade === "Concorrência"
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-200 text-gray-600"
-                      }`}
-                  >
-                    {l.modalidade}
-                  </span>
+                    }`}
+                >
+                  {l.modalidade}
+                </span>
 
-                  <span className="text-xs text-gray-500 whitespace-nowrap">
-                    Publicação: <span className="font-medium">{l.dataPublicacao}</span>
-                  </span>
-                </div>
+                <span className="text-xs text-gray-500 whitespace-nowrap">
+                  Publicação: <span className="font-medium">{l.dataPublicacao}</span>
+                </span>
               </div>
-            ))}
-          </div>
-        </>
+            </div>
+          ))}
+        </div>
       )}
 
+      {/* MODAL */}
       {selecionada && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 relative">
