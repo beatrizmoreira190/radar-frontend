@@ -110,6 +110,13 @@ export default function Licitacoes() {
     };
   });
 
+  // ===== ORDENAR POR DATA MAIS RECENTE =====
+  dadosConvertidos.sort((a, b) => {
+    const dataA = new Date(a.raw.dataPublicacaoPncp || a.dataPublicacao || 0);
+    const dataB = new Date(b.raw.dataPublicacaoPncp || b.dataPublicacao || 0);
+    return dataB - dataA; // mais recente primeiro
+  });
+
   // ====== FILTROS LOCAIS ======
   const filtrados = dadosConvertidos.filter((item) => {
     const texto = `${item.objeto} ${item.orgao} ${item.modalidadeNome} ${item.municipio}`.toLowerCase();
