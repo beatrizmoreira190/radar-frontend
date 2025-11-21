@@ -5,16 +5,20 @@ import axios from "axios";
 export default function Licitacoes() {
   const [dados, setDados] = useState([]);
   const [loading, setLoading] = useState(false);
+
   const [busca, setBusca] = useState("");
   const [modalidade, setModalidade] = useState("");
   const [uf, setUf] = useState("");
   const [viewMode, setViewMode] = useState("table");
   const [selecionada, setSelecionada] = useState(null);
 
-  // BACKEND
+  // Paginação somente no frontend
+  const [pagina, setPagina] = useState(1);
+  const porPagina = 10;
+
   const API = "https://radar-backend-c3p5.onrender.com";
 
-  // ===== FUNÇÃO DE BUSCA (BANCO) =====
+  // ===== FUNÇÃO DE BUSCA (LENDO DO BANCO) =====
   const buscarLicitacoes = async () => {
     setLoading(true);
 
@@ -25,10 +29,12 @@ export default function Licitacoes() {
       if (busca) params.append("busca", busca);
       if (uf) params.append("uf", uf);
 
-      const res = await axios.get(`${API}/licitacoes/listar_banco?` + params.toString());
+      const res = await axios.get(
+        `${API}/licitacoes/listar_banco?` + params.toString()
+      );
       const lista = res.data?.dados || [];
-
       setDados(lista);
+      setPagina(1); // reset na página ao buscar
     } catch (err) {
       console.error("Erro ao carregar licitações:", err);
     }
@@ -36,68 +42,138 @@ export default function Licitacoes() {
     setLoading(false);
   };
 
-  // Buscar na primeira carga
   useEffect(() => {
     buscarLicitacoes();
   }, []);
 
-  // ====== CONVERSÃO DOS DADOS DO BANCO ======
-  const dadosConvertidos = dados.map((item) => ({
-    orgao: item.orgao || "—",
-    objeto: item.objeto || "—",
-    modalidade:
-      item.modalidade === "6" || item.modalidade === 6
-        ? "Pregão Eletrônico"
-        : item.modalidade === "1" || item.modalidade === 1
-        ? "Concorrência"
-        : item.modalidade && item.modalidade !== "None"
-        ? item.modalidade
-        : "Outras",
-    dataPublicacao: item.data_publicacao
-      ? new Date(item.data_publicacao).toLocaleDateString("pt-BR")
-      : "—",
-    uf: item.uf || "",
-    raw: item,
-  }));
+  // ====== CONVERSÃO DOS DADOS (USANDO json_raw) ======
+  const dadosConvertidos = dados.map((item) => {
+    const raw = item.json_raw || {};
 
-  // ====== MÉTRICAS ======
-  const total = dadosConvertidos.length;
-  const totalPregao = dadosConvertidos.filter((d) => d.modalidade === "Pregão Eletrônico").length;
-  const totalConcorrencia = dadosConvertidos.filter((d) => d.modalidade === "Concorrência").length;
+    const orgaoEntidade = raw.orgaoEntidade || {};
+    const unidadeOrgao = raw.unidadeOrgao || {};
+    const amparoLegal = raw.amparoLegal || {};
+
+    const situacaoCompraNome = raw.situacaoCompraNome || "—";
+    const modalidadeNome = raw.modalidadeNome || item.modalidade || "—";
+    const modoDisputaNome = raw.modoDisputaNome || "—";
+
+    const dataPublicacaoPncp = raw.dataPublicacaoPncp || item.data_publicacao;
+    const dataAberturaProposta =
+      raw.dataAberturaProposta || item.data_abertura;
+    const dataEncerramentoProposta = raw.dataEncerramentoProposta || null;
+
+    const valorTotalEstimado = raw.valorTotalEstimado || null;
+
+    return {
+      orgao: orgaoEntidade.razaoSocial || item.orgao || "—",
+      cnpj: orgaoEntidade.cnpj || "—",
+      unidade: unidadeOrgao.nomeUnidade || "—",
+      municipio: unidadeOrgao.municipioNome || item.municipio || "—",
+      ufSigla: unidadeOrgao.ufSigla || item.uf || "—",
+      ibge: unidadeOrgao.codigoIbge || null,
+
+      objeto: raw.objetoCompra || item.objeto || "—",
+
+      numeroCompra: raw.numeroCompra || item.numero || "—",
+      processo: raw.processo || null,
+      idPNCP: raw.numeroControlePNCP || item.id_externo || "—",
+
+      modalidadeNome,
+      situacao: situacaoCompraNome,
+      disputa: modoDisputaNome,
+
+      amparoLegal,
+      srp: raw.srp || false,
+
+      dataPublicacao: dataPublicacaoPncp
+        ? new Date(dataPublicacaoPncp).toLocaleString("pt-BR")
+        : "—",
+      dataAbertura: dataAberturaProposta
+        ? new Date(dataAberturaProposta).toLocaleString("pt-BR")
+        : "—",
+      dataEncerramento: dataEncerramentoProposta
+        ? new Date(dataEncerramentoProposta).toLocaleString("pt-BR")
+        : "—",
+
+      valorEstimado: valorTotalEstimado
+        ? `R$ ${valorTotalEstimado.toLocaleString("pt-BR")}`
+        : "—",
+
+      link: raw.linkSistemaOrigem || item.url_externa || null,
+      informacaoComplementar: raw.informacaoComplementar || null,
+
+      itens: raw.itens || [],
+      anexos: raw.anexos || [],
+
+      raw,
+    };
+  });
 
   // ====== FILTROS LOCAIS ======
   const filtrados = dadosConvertidos.filter((item) => {
-    const texto = `${item.objeto} ${item.orgao} ${item.modalidade}`.toLowerCase();
-    const buscaOK = busca ? texto.includes(busca.toLowerCase()) : true;
-    const modOK = modalidade ? item.modalidade === modalidade : true;
-    const ufOK = uf ? item.uf === uf : true;
+    const texto = `${item.objeto} ${item.orgao} ${item.modalidadeNome} ${item.municipio}`.toLowerCase();
+    const buscaOK = busca
+      ? texto.includes(busca.toLowerCase())
+      : true;
+    const modOK = modalidade
+      ? item.modalidadeNome.toLowerCase().includes(modalidade.toLowerCase())
+      : true;
+    const ufOK = uf ? item.ufSigla === uf : true;
     return buscaOK && modOK && ufOK;
   });
+
+  // ====== PAGINAÇÃO FRONT ======
+  const totalRegistros = filtrados.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalRegistros / porPagina));
+  const inicio = (pagina - 1) * porPagina;
+  const fim = inicio + porPagina;
+  const paginaAtual = filtrados.slice(inicio, fim);
+
+  const mudarPagina = (nova) => {
+    if (nova < 1 || nova > totalPaginas) return;
+    setPagina(nova);
+  };
+
+  // ====== MÉTRICAS ======
+  const totalPregao = filtrados.filter((d) =>
+    d.modalidadeNome.toLowerCase().includes("pregão")
+  ).length;
+  const totalOutras = totalRegistros - totalPregao;
 
   return (
     <Layout titulo="Licitações">
       {/* METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">Licitações encontradas</div>
-          <div className="text-2xl font-bold text-gray-900 mt-2">{total}</div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">Pregões eletrônicos</div>
-          <div className="text-2xl font-bold text-gray-900 mt-2">{totalPregao}</div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
-          <div className="text-xs font-medium text-gray-500">Concorrências / Outras</div>
+          <div className="text-xs font-medium text-gray-500">
+            Licitações encontradas
+          </div>
           <div className="text-2xl font-bold text-gray-900 mt-2">
-            {totalConcorrencia}{" "}
-            <span className="text-sm font-medium text-gray-400">/ {total - totalPregao}</span>
+            {totalRegistros}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
+          <div className="text-xs font-medium text-gray-500">
+            Pregões eletrônicos
+          </div>
+          <div className="text-2xl font-bold text-gray-900 mt-2">
+            {totalPregao}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
+          <div className="text-xs font-medium text-gray-500">
+            Outras modalidades
+          </div>
+          <div className="text-2xl font-bold text-gray-900 mt-2">
+            {totalOutras}
           </div>
         </div>
       </div>
 
-      {/* BUSCA / FILTROS / BOTÃO */}
+      {/* BUSCA / FILTROS / MODO VISUALIZAÇÃO */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex-1">
           <input
@@ -111,30 +187,29 @@ export default function Licitacoes() {
 
         <div className="flex gap-3">
           <select
-            className="border border-gray-200 p-3 rounded-xl shadow-sm bg-white"
+            className="border border-gray-200 p-3 rounded-xl shadow-sm bg-white text-sm"
             value={modalidade}
             onChange={(e) => setModalidade(e.target.value)}
           >
             <option value="">Todas Modalidades</option>
-            <option value="Pregão Eletrônico">Pregão Eletrônico</option>
-            <option value="Concorrência">Concorrência</option>
-            <option value="Outras">Outras</option>
+            <option value="pregão">Pregão</option>
+            <option value="concorrência">Concorrência</option>
           </select>
 
           <select
-            className="border border-gray-200 p-3 rounded-xl shadow-sm bg-white"
+            className="border border-gray-200 p-3 rounded-xl shadow-sm bg-white text-sm"
             value={uf}
             onChange={(e) => setUf(e.target.value)}
           >
             <option value="">UF</option>
-            <option value="PI">PI</option>
+            <option value="CE">CE</option>
+            <option value="MG">MG</option>
             <option value="SP">SP</option>
             <option value="RJ">RJ</option>
-            <option value="MG">MG</option>
           </select>
 
           <button
-            className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700 text-sm"
             onClick={buscarLicitacoes}
           >
             Buscar
@@ -144,7 +219,9 @@ export default function Licitacoes() {
         <div className="flex bg-gray-100 rounded-full p-1 text-xs font-medium">
           <button
             className={`px-4 py-2 rounded-full transition ${
-              viewMode === "table" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
+              viewMode === "table"
+                ? "bg-white shadow-sm text-gray-900"
+                : "text-gray-500"
             }`}
             onClick={() => setViewMode("table")}
           >
@@ -152,7 +229,9 @@ export default function Licitacoes() {
           </button>
           <button
             className={`px-4 py-2 rounded-full transition ${
-              viewMode === "cards" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
+              viewMode === "cards"
+                ? "bg-white shadow-sm text-gray-900"
+                : "text-gray-500"
             }`}
             onClick={() => setViewMode("cards")}
           >
@@ -161,93 +240,103 @@ export default function Licitacoes() {
         </div>
       </div>
 
-      {/* TABELA OU CARDS */}
-      {filtrados.length === 0 ? (
+      {/* LISTAGEM */}
+      {loading ? (
+        <div className="text-center text-gray-500 text-sm py-12">
+          Carregando licitações...
+        </div>
+      ) : paginaAtual.length === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-500 text-sm">
           Nenhuma licitação encontrada com os filtros atuais.
         </div>
       ) : viewMode === "table" ? (
         <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Órgão</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Objeto</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Modalidade</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Publicação</th>
+              <tr className="text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3">Órgão</th>
+                <th className="px-4 py-3">Município / UF</th>
+                <th className="px-4 py-3">Objeto</th>
+                <th className="px-4 py-3">Modalidade</th>
+                <th className="px-4 py-3">Situação</th>
+                <th className="px-4 py-3 whitespace-nowrap">Abertura</th>
+                <th className="px-4 py-3 whitespace-nowrap">Valor Estimado</th>
               </tr>
             </thead>
-
             <tbody>
-              {filtrados.map((l, i) => (
+              {paginaAtual.map((l, i) => (
                 <tr
                   key={i}
                   className="border-b last:border-none hover:bg-gray-50 transition cursor-pointer"
                   onClick={() => setSelecionada(l)}
                 >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-800">{l.orgao}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600 max-w-xl truncate">{l.objeto}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold
-                        ${
-                          l.modalidade === "Pregão Eletrônico"
-                            ? "bg-blue-100 text-blue-700"
-                            : l.modalidade === "Concorrência"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-200 text-gray-700"
-                        }`}
-                    >
-                      {l.modalidade}
-                    </span>
+                  <td className="px-4 py-3 font-medium text-gray-800">
+                    {l.orgao}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{l.dataPublicacao}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {l.municipio} / {l.ufSigla}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 max-w-xl truncate">
+                    {l.objeto}
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {l.modalidadeNome}
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {l.situacao}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                    {l.dataAbertura}
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {l.valorEstimado}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
+        // CARDS
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filtrados.map((l, i) => (
+          {paginaAtual.map((l, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer px-6 py-5 flex flex-col gap-4"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm 
+                         hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer
+                         px-6 py-5 flex flex-col gap-4"
               onClick={() => setSelecionada(l)}
             >
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
                   <span className="text-lg text-gray-500">🏛️</span>
                 </div>
-
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900 leading-tight">{l.orgao}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Publicado via PNCP</p>
+                  <p className="text-sm font-semibold text-gray-900 leading-tight">
+                    {l.orgao}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {l.municipio} • {l.ufSigla}
+                  </p>
                 </div>
               </div>
 
               <div className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                {l.objeto !== "—" ? l.objeto : "Descrição não informada"}
+                {l.objeto}
               </div>
 
               <div className="w-full h-px bg-gray-100" />
 
               <div className="flex items-center justify-between">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold
-                    ${
-                      l.modalidade === "Pregão Eletrônico"
-                        ? "bg-blue-100 text-blue-700"
-                        : l.modalidade === "Concorrência"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
-                >
-                  {l.modalidade}
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                  {l.modalidadeNome}
                 </span>
 
                 <span className="text-xs text-gray-500 whitespace-nowrap">
-                  Publicação: <span className="font-medium">{l.dataPublicacao}</span>
+                  Abertura:{" "}
+                  <span className="font-medium">
+                    {l.dataAbertura}
+                  </span>
                 </span>
               </div>
             </div>
@@ -255,10 +344,33 @@ export default function Licitacoes() {
         </div>
       )}
 
-      {/* MODAL */}
+      {/* PAGINAÇÃO FRONT */}
+      {totalPaginas > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6 text-sm">
+          <button
+            className="px-3 py-1 rounded bg-gray-100 border border-gray-200 disabled:opacity-40"
+            disabled={pagina === 1}
+            onClick={() => mudarPagina(pagina - 1)}
+          >
+            ◀
+          </button>
+          <span className="text-gray-700">
+            Página {pagina} de {totalPaginas}
+          </span>
+          <button
+            className="px-3 py-1 rounded bg-gray-100 border border-gray-200 disabled:opacity-40"
+            disabled={pagina === totalPaginas}
+            onClick={() => mudarPagina(pagina + 1)}
+          >
+            ▶
+          </button>
+        </div>
+      )}
+
+      {/* MODAL DETALHADO */}
       {selecionada && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 relative">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
             <button
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
               onClick={() => setSelecionada(null)}
@@ -266,21 +378,194 @@ export default function Licitacoes() {
               ✕
             </button>
 
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">{selecionada.orgao}</h2>
-            <p className="text-sm text-gray-700 mb-4">{selecionada.objeto}</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              {selecionada.orgao}
+            </h2>
+            <p className="text-xs text-gray-500 mb-4">
+              CNPJ: {selecionada.cnpj}
+            </p>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <p className="text-sm text-gray-700 mb-4">
+              {selecionada.objeto}
+            </p>
+
+            {/* GRID DE DETALHES */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
               <div>
-                <div className="text-xs font-semibold text-gray-500 uppercase">Modalidade</div>
-                <div className="mt-1">{selecionada.modalidade}</div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Unidade
+                </div>
+                <div>{selecionada.unidade}</div>
               </div>
+
               <div>
-                <div className="text-xs font-semibold text-gray-500 uppercase">Publicação</div>
-                <div className="mt-1">{selecionada.dataPublicacao}</div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Município / UF
+                </div>
+                <div>
+                  {selecionada.municipio} / {selecionada.ufSigla}
+                </div>
               </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Modalidade
+                </div>
+                <div>{selecionada.modalidadeNome}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Situação PNCP
+                </div>
+                <div>{selecionada.situacao}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Número da compra
+                </div>
+                <div>{selecionada.numeroCompra}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  ID PNCP
+                </div>
+                <div>{selecionada.idPNCP}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Data publicação
+                </div>
+                <div>{selecionada.dataPublicacao}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Abertura
+                </div>
+                <div>{selecionada.dataAbertura}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Encerramento
+                </div>
+                <div>{selecionada.dataEncerramento}</div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase">
+                  Valor estimado
+                </div>
+                <div>{selecionada.valorEstimado}</div>
+              </div>
+
+              {selecionada.amparoLegal?.nome && (
+                <div className="md:col-span-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase">
+                    Amparo legal
+                  </div>
+                  <div>
+                    {selecionada.amparoLegal.nome}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {selecionada.amparoLegal.descricao}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            {/* INFORMACOES COMPLEMENTARES */}
+            {selecionada.informacaoComplementar && (
+              <div className="mb-6 text-sm">
+                <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                  Informações adicionais
+                </div>
+                <p className="text-gray-700 whitespace-pre-line">
+                  {selecionada.informacaoComplementar}
+                </p>
+              </div>
+            )}
+
+            {/* ITENS */}
+            {selecionada.itens && selecionada.itens.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                  Itens da licitação
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {selecionada.itens.map((it, idx) => (
+                    <div
+                      key={idx}
+                      className="border border-gray-200 rounded-xl p-3 bg-gray-50"
+                    >
+                      <div className="font-semibold text-gray-800 mb-1">
+                        Item {it.numeroItem || it.numero || idx + 1}
+                      </div>
+                      <div className="text-gray-700">
+                        {it.descricaoItem || it.descricao || "Descrição não informada"}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {it.quantidade && (
+                          <>
+                            Quantidade: {it.quantidade}{" "}
+                          </>
+                        )}
+                        {it.unidade && (
+                          <>• Unidade: {it.unidade}</>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ANEXOS */}
+            {selecionada.anexos && selecionada.anexos.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                  Anexos
+                </h3>
+                <ul className="list-disc list-inside text-sm text-indigo-700">
+                  {selecionada.anexos.map((ax, idx) => (
+                    <li key={idx}>
+                      {ax.url ? (
+                        <a
+                          href={ax.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:underline"
+                        >
+                          {ax.nomeArquivo || ax.nome || `Anexo ${idx + 1}`}
+                        </a>
+                      ) : (
+                        ax.nomeArquivo || ax.nome || `Anexo ${idx + 1}`
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* LINK OFICIAL */}
+            {selecionada.link && (
+              <div className="mb-6 text-sm">
+                <a
+                  href={selecionada.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  Ver edital / página oficial
+                </a>
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-end gap-3">
               <button
                 className="px-4 py-2 rounded-lg text-sm border border-gray-300 text-gray-700 hover:bg-gray-50"
                 onClick={() => setSelecionada(null)}
