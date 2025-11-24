@@ -85,6 +85,17 @@ export default function LicitacaoDetalhe() {
   const itens = raw.itens || [];
   const anexos = raw.anexos || [];
 
+  const iniciarAcompanhamento = async () => {
+  try {
+    await axios.post(`${API}/acompanhamento/iniciar?licitacao_id=${id}`);
+    alert("Acompanhamento iniciado!");
+    carregarAcompanhamento(); // ← vamos criar já já
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao iniciar acompanhamento");
+  }
+};
+
   return (
     <Layout titulo="Detalhes da Licitação">
       {/* Breadcrumb / Cabeçalho */}
@@ -298,7 +309,13 @@ export default function LicitacaoDetalhe() {
     }
   }}
 >
-  ⭐ Salvar licitação
+  Salvar licitação
+</button>
+        <button
+  className="px-4 py-2 rounded-lg text-sm bg-green-600 text-white font-semibold hover:bg-green-700"
+  onClick={iniciarAcompanhamento}
+>
+  Acompanhar licitação
 </button>
       </div>
     </Layout>
