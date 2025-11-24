@@ -6,11 +6,30 @@ export default function Sidebar() {
       <h1 className="text-xl font-bold mb-8">Radar Inteligente</h1>
 
       <nav className="flex flex-col gap-4">
-        <Link to="/dashboard" className="hover:text-blue-600">Dashboard</Link>
-        <Link to="/licitacoes" className="hover:text-blue-600">Licitações</Link>
-        <Link to="/catalogo" className="hover:text-blue-600">Catálogo</Link>
-        <Link to="/relatorios" className="hover:text-blue-600">Relatórios</Link>
-        <Link to="/notificacoes" className="hover:text-blue-600">Notificações</Link>
+        <Link to="/dashboard" className="hover:text-blue-600">
+          Dashboard
+        </Link>
+
+        <Link to="/licitacoes" className="hover:text-blue-600">
+          Licitações
+        </Link>
+
+        {/* ⭐ NOVO ITEM ADICIONADO */}
+        <Link to="/interesses" className="hover:text-blue-600">
+          ⭐ Licitações Salvas
+        </Link>
+
+        <Link to="/catalogo" className="hover:text-blue-600">
+          Catálogo
+        </Link>
+
+        <Link to="/relatorios" className="hover:text-blue-600">
+          Relatórios
+        </Link>
+
+        <Link to="/notificacoes" className="hover:text-blue-600">
+          Notificações
+        </Link>
       </nav>
     </div>
   );
