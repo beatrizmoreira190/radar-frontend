@@ -16,7 +16,7 @@ export default function Sidebar() {
 
         {/* ⭐ NOVO ITEM ADICIONADO */}
         <Link to="/interesses" className="hover:text-blue-600">
-          ⭐ Licitações Salvas
+          Licitações Salvas
         </Link>
 
         <Link to="/catalogo" className="hover:text-blue-600">
