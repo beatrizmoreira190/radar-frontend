@@ -8,7 +8,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="flex">
-        <Sidebar />
+        
 
         <div className="flex-1">
           <Routes>
