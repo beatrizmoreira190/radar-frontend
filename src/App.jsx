@@ -3,6 +3,7 @@ import Sidebar from "./components/Sidebar";
 import Licitacoes from "./pages/Licitacoes";
 import LicitacaoDetalhe from "./pages/LicitacaoDetalhe";
 import Interesses from "./pages/Interesses";
+import AcompanhamentoLicitacao from "./pages/AcompanhamentoLicitacao";
 
 export default function App() {
   return (
@@ -16,6 +17,9 @@ export default function App() {
             <Route path="/" element={<Licitacoes />} />
             <Route path="/licitacao/:id" element={<LicitacaoDetalhe />} />
             <Route path="/interesses" element={<Interesses />} />
+            {/* ...outras rotas... */}
+  <Route path="/licitacao/:id" element={<LicitacaoDetalhe />} />
+  <Route path="/acompanhamento/:id" element={<AcompanhamentoLicitacao />} />
           </Routes>
         </div>
       </div>
