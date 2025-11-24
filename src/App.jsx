@@ -14,6 +14,7 @@ export default function App() {
             <Route path="/licitacoes" element={<Licitacoes />} />
             <Route path="/" element={<Licitacoes />} />
             <Route path="/licitacao/:id" element={<LicitacaoDetalhe />} />
+            <Route path="/interesses" element={<Interesses />} />
           </Routes>
         </div>
       </div>
