@@ -8,29 +8,19 @@ const API = "https://radar-backend-c3p5.onrender.com";
 export default function LicitacaoDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [licitacao, setLicitacao] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
 
-  // Acompanhamento
-  const [tarefas, setTarefas] = useState([]);
-  const [novaTarefa, setNovaTarefa] = useState("");
-  const [status, setStatus] = useState("interessado");
-  const [acompanhamentoAtivo, setAcompanhamentoAtivo] = useState(false);
-
-  // ==========================================
-  // 1) Carregar licitação
-  // ==========================================
   useEffect(() => {
     const fetchLicitacao = async () => {
       try {
-        const res = await axios.get(`${API}/licitacoes/listar_banco`);
-        const lic = res.data?.dados?.find((l) => String(l.id) === id);
-        if (!lic) {
+        const res = await axios.get(`${API}/licitacoes/listar_banco?id=${id}`);
+        const dados = res.data?.dados || [];
+        if (!dados.length) {
           setErro("Licitação não encontrada.");
         } else {
-          setLicitacao(lic);
+          setLicitacao(dados[0]);
         }
       } catch (e) {
         console.error(e);
@@ -41,54 +31,12 @@ export default function LicitacaoDetalhe() {
     fetchLicitacao();
   }, [id]);
 
-  // ==========================================
-  // 2) Carregar acompanhamento
-  // ==========================================
-  const carregarAcompanhamento = async () => {
-    try {
-      // Verificar se acompanhamento existe (usando favoritos)
-      const fav = await axios.get(`${API}/interesses/verificar?licitacao_id=${id}`);
-      setAcompanhamentoAtivo(fav.data.salvo);
-
-      // Carregar tarefas
-      const resT = await axios.get(`${API}/acompanhamento/tarefas?licitacao_id=${id}`);
-      setTarefas(resT.data?.tarefas || []);
-
-      // Carregar status (pegamos via listar_interesses)
-      const resI = await axios.get(`${API}/interesses/listar`);
-      const item = resI.data?.dados?.find((d) => String(d.id) === id);
-      if (item?.status) {
-        setStatus(item.status);
-      }
-
-    } catch (err) {
-      console.error("Erro ao carregar acompanhamento", err);
-    }
-  };
-
-  useEffect(() => {
-    carregarAcompanhamento();
-  }, [id]);
-
-  // ==========================================
-  // 3) Iniciar acompanhamento
-  // ==========================================
-  const iniciarAcompanhamento = async () => {
-    try {
-      await axios.post(`${API}/acompanhamento/iniciar?licitacao_id=${id}`);
-      setAcompanhamentoAtivo(true);
-      carregarAcompanhamento();
-      alert("Acompanhamento iniciado!");
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao iniciar acompanhamento");
-    }
-  };
-
   if (loading) {
     return (
       <Layout titulo="Detalhes da Licitação">
-        <div className="text-center text-gray-500 mt-10">Carregando detalhes...</div>
+        <div className="text-center text-gray-500 mt-10">
+          Carregando detalhes...
+        </div>
       </Layout>
     );
   }
@@ -109,10 +57,7 @@ export default function LicitacaoDetalhe() {
     );
   }
 
-  // Dados do raw
   const raw = licitacao.json_raw || {};
-  const itens = raw.itens || [];
-  const anexos = raw.anexos || [];
   const orgaoEntidade = raw.orgaoEntidade || {};
   const unidadeOrgao = raw.unidadeOrgao || {};
   const amparoLegal = raw.amparoLegal || {};
@@ -137,171 +82,243 @@ export default function LicitacaoDetalhe() {
     ? `R$ ${raw.valorTotalEstimado.toLocaleString("pt-BR")}`
     : "—";
 
-  // ==========================================
-  // COMPONENTE FINAL
-  // ==========================================
+  const itens = raw.itens || [];
+  const anexos = raw.anexos || [];
+
+  const iniciarAcompanhamento = async () => {
+  try {
+    await axios.post(`${API}/acompanhamento/iniciar?licitacao_id=${id}`);
+    alert("Acompanhamento iniciado!");
+    carregarAcompanhamento(); // ← vamos criar já já
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao iniciar acompanhamento");
+  }
+};
+
   return (
     <Layout titulo="Detalhes da Licitação">
-
-      {/* Breadcrumb */}
+      {/* Breadcrumb / Cabeçalho */}
       <div className="mb-6 text-sm text-gray-500">
-        <button onClick={() => navigate("/licitacoes")} className="text-indigo-600 hover:underline">
-          Licitações
-        </button>{" "}
-        /{" "}
-        <span className="font-medium">{orgaoEntidade.razaoSocial || licitacao.orgao}</span>
-      </div>
-
-      {/* Botões principais */}
-      <div className="flex justify-end gap-3 mb-6">
         <button
           onClick={() => navigate("/licitacoes")}
-          className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 border hover:bg-gray-200"
+          className="text-indigo-600 hover:underline"
         >
-          Voltar
-        </button>
-
-        {/* SALVAR LICITAÇÃO */}
-        <button
-          className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
-          onClick={async () => {
-            try {
-              const res = await axios.post(
-                `${API}/interesses/adicionar`,
-                null,
-                { params: { licitacao_id: id } }
-              );
-              alert(res.data.mensagem);
-            } catch (e) {
-              alert("Erro ao salvar.");
-            }
-          }}
-        >
-          ⭐ Salvar licitação
-        </button>
-
-        {/* ACOMPANHAR */}
-        <button
-          className="px-4 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700"
-          onClick={iniciarAcompanhamento}
-        >
-          📋 Acompanhar licitação
-        </button>
+          Licitações
+        </button>{" "}
+        / <span className="font-medium">{orgaoEntidade.razaoSocial || licitacao.orgao}</span>
       </div>
 
-      {/* ==========================
-          AC OMPANHAMENTO
-      =========================== */}
-      {acompanhamentoAtivo && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8 shadow">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">📋 Acompanhamento</h2>
-
-          {/* STATUS */}
-          <div className="mb-6">
-            <label className="text-sm text-gray-600 font-semibold mr-2">Status:</label>
-            <select
-              className="border p-2 rounded-xl"
-              value={status}
-              onChange={async (e) => {
-                const novo = e.target.value;
-                setStatus(novo);
-                await axios.patch(`${API}/acompanhamento/status`, null, {
-                  params: { licitacao_id: id, status: novo },
-                });
-              }}
-            >
-              <option value="interessado">Interessado</option>
-              <option value="estudando_editais">Estudando edital</option>
-              <option value="documentacao_pronta">Documentação pronta</option>
-              <option value="proposta_enviada">Proposta enviada</option>
-              <option value="aguardando_resultado">Aguardando resultado</option>
-              <option value="encerrado">Encerrado</option>
-            </select>
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">
+              {orgaoEntidade.razaoSocial || licitacao.orgao}
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              CNPJ: {orgaoEntidade.cnpj || "—"}
+            </p>
+            <p className="text-sm text-gray-700 mt-3">
+              {raw.objetoCompra || licitacao.objeto}
+            </p>
           </div>
-
-          {/* TAREFAS */}
-          <h3 className="font-medium text-gray-800 mb-2">Checklist</h3>
-
-          {tarefas.length === 0 && (
-            <p className="text-sm text-gray-500 mb-2">Nenhuma tarefa ainda.</p>
-          )}
-
-          <div className="space-y-2">
-            {tarefas.map((t) => (
-              <div
-                key={t.id}
-                className="flex items-center justify-between border rounded-xl p-3 bg-gray-50"
-              >
-                <span className={t.concluido ? "line-through text-gray-400" : "text-gray-800"}>
-                  {t.titulo}
-                </span>
-
-                <div className="flex gap-2">
-                  {!t.concluido && (
-                    <button
-                      className="text-xs bg-green-600 text-white px-3 py-1 rounded-xl"
-                      onClick={async () => {
-                        await axios.patch(`${API}/acompanhamento/tarefas/concluir/${t.id}`);
-                        carregarAcompanhamento();
-                      }}
-                    >
-                      Concluir
-                    </button>
-                  )}
-
-                  <button
-                    className="text-xs bg-red-600 text-white px-3 py-1 rounded-xl"
-                    onClick={async () => {
-                      await axios.delete(`${API}/acompanhamento/tarefas/remover/${t.id}`);
-                      carregarAcompanhamento();
-                    }}
-                  >
-                    Remover
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* ADICIONAR TAREFA */}
-          <div className="mt-4 flex gap-2">
-            <input
-              type="text"
-              className="border p-2 rounded-xl flex-1"
-              placeholder="Nova tarefa..."
-              value={novaTarefa}
-              onChange={(e) => setNovaTarefa(e.target.value)}
-            />
+          <div className="flex flex-col items-end gap-2 text-sm">
+            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-xs font-medium">
+              {raw.modalidadeNome || licitacao.modalidade || "Modalidade não informada"}
+            </span>
+            <span className="text-xs text-gray-500">
+              Situação:{" "}
+              <span className="font-medium">
+                {raw.situacaoCompraNome || "—"}
+              </span>
+            </span>
             <button
-              className="bg-indigo-600 text-white px-4 py-2 rounded-xl"
-              onClick={async () => {
-                if (!novaTarefa.trim()) return;
-                await axios.post(`${API}/acompanhamento/tarefas/adicionar`, null, {
-                  params: {
-                    licitacao_id: id,
-                    titulo: novaTarefa,
-                  },
-                });
-                setNovaTarefa("");
-                carregarAcompanhamento();
+              className="mt-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700"
+              onClick={() => {
+                if (licitacao.url_externa) {
+                  window.open(licitacao.url_externa, "_blank");
+                } else if (raw.linkSistemaOrigem) {
+                  window.open(raw.linkSistemaOrigem, "_blank");
+                }
               }}
             >
-              + Adicionar
+              Ver edital / página oficial
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid de informações principais */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm">
+          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+            Município / UF
+          </div>
+          <div className="text-gray-800">
+            {unidadeOrgao.municipioNome || licitacao.municipio || "—"}{" "}
+            { (unidadeOrgao.ufSigla || licitacao.uf) && (
+              <>/ {unidadeOrgao.ufSigla || licitacao.uf}</>
+            )}
+          </div>
+          <div className="text-xs text-gray-400 mt-1">
+            Código IBGE: {unidadeOrgao.codigoIbge || "—"}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm">
+          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+            Datas
+          </div>
+          <div className="text-gray-800">
+            Publicação: <span className="font-medium">{dataPublicacao}</span>
+          </div>
+          <div className="text-gray-800">
+            Abertura: <span className="font-medium">{dataAbertura}</span>
+          </div>
+          <div className="text-gray-800">
+            Encerramento: <span className="font-medium">{dataEncerramento}</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm">
+          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+            Identificação
+          </div>
+          <div className="text-gray-800">
+            Número da compra: <span className="font-medium">{raw.numeroCompra || licitacao.numero}</span>
+          </div>
+          <div className="text-gray-800">
+            ID PNCP: <span className="font-medium">{raw.numeroControlePNCP || licitacao.id_externo}</span>
+          </div>
+          <div className="text-gray-800">
+            Valor estimado: <span className="font-medium">{valorTotalEstimado}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Amparo legal */}
+      {amparoLegal?.nome && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm mb-6">
+          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+            Amparo legal
+          </div>
+          <div className="text-gray-800">{amparoLegal.nome}</div>
+          <div className="text-xs text-gray-500 mt-1">
+            {amparoLegal.descricao}
           </div>
         </div>
       )}
 
-      {/* ====================================================
-          DETALHES COMPLETOS DA LICITAÇÃO (SEÇÃO ANTIGA)
-      ==================================================== */}
+      {/* Informações adicionais */}
+      {raw.informacaoComplementar && raw.informacaoComplementar.trim() !== "" && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm mb-6">
+          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+            Informações adicionais
+          </div>
+          <p className="text-gray-700 whitespace-pre-line">
+            {raw.informacaoComplementar}
+          </p>
+        </div>
+      )}
 
-      {/* ... (TODO O RESTO DO SEU CÓDIGO, JÁ ESTÁ CERTO) ... */}
+      {/* Itens */}
+      {itens.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-900">
+              Itens da licitação
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {itens.map((it, idx) => (
+              <div
+                key={idx}
+                className="border border-gray-200 rounded-xl p-3 bg-gray-50"
+              >
+                <div className="font-semibold text-gray-800 mb-1">
+                  Item {it.numeroItem || it.numero || idx + 1}
+                </div>
+                <div className="text-gray-700">
+                  {it.descricaoItem || it.descricao || "Descrição não informada"}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {it.quantidade && <>Quantidade: {it.quantidade} </>}
+                  {it.unidade && <>• Unidade: {it.unidade}</>}
+                  {it.valorUnitario && (
+                    <>
+                      {" "}
+                      • Valor unitário: R${" "}
+                      {Number(it.valorUnitario).toLocaleString("pt-BR")}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Informações: itens, anexos, etc — que você já tinha */}
-      {/* (Mantive sua estrutura de cards preservada acima) */}
+      {/* Anexos */}
+      {anexos.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm mb-6">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">
+            Anexos
+          </h2>
+          <ul className="list-disc list-inside text-indigo-700">
+            {anexos.map((ax, idx) => (
+              <li key={idx} className="mb-1">
+                {ax.url ? (
+                  <a
+                    href={ax.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline"
+                  >
+                    {ax.nomeArquivo || ax.nome || `Anexo ${idx + 1}`}
+                  </a>
+                ) : (
+                  ax.nomeArquivo || ax.nome || `Anexo ${idx + 1}`
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
+      {/* Ações */}
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          className="px-4 py-2 rounded-lg text-sm border border-gray-300 text-gray-700 hover:bg-gray-50"
+          onClick={() => navigate("/licitacoes")}
+        >
+          Voltar
+        </button>
+        <button
+  className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+  onClick={async () => {
+    try {
+      const res = await axios.post(
+        `${API}/interesses/adicionar`,
+        null,
+        { params: { licitacao_id: id } }
+      );
+      alert(res.data.mensagem);
+    } catch (e) {
+      alert("Erro ao salvar.");
+    }
+  }}
+>
+  Salvar licitação
+</button>
+        <button
+  className="px-4 py-2 rounded-lg text-sm bg-green-600 text-white font-semibold hover:bg-green-700"
+  onClick={iniciarAcompanhamento}
+>
+  Acompanhar licitação
+</button>
+      </div>
     </Layout>
   );
 }
+
