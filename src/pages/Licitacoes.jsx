@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import axios from "axios";
 
@@ -22,6 +23,7 @@ export default function Licitacoes() {
   const [porPagina, setPorPagina] = useState(10);
 
   const API = "https://radar-backend-c3p5.onrender.com";
+  const navigate = useNavigate();
 
   // ===== FUNÇÃO DE BUSCA (LENDO DO BANCO) =====
   const buscarLicitacoes = async () => {
@@ -71,6 +73,7 @@ export default function Licitacoes() {
     const valorTotalEstimado = raw.valorTotalEstimado || null;
 
     return {
+      id: item.id,
       orgao: orgaoEntidade.razaoSocial || item.orgao || "—",
       cnpj: orgaoEntidade.cnpj || "—",
       unidade: unidadeOrgao.nomeUnidade || "—",
@@ -790,9 +793,16 @@ export default function Licitacoes() {
               >
                 Fechar
               </button>
-              <button className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
-                Salvar licitação
-              </button>
+              <button
+          className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+          onClick={() => {
+            if (selecionada?.id) {
+              navigate(`/licitacao/${selecionada.id}`);
+            }
+          }}
+        >
+          Abrir página completa
+        </button>
             </div>
           </div>
         </div>
