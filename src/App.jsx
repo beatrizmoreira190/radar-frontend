@@ -17,9 +17,9 @@ export default function App() {
             <Route path="/" element={<Licitacoes />} />
             <Route path="/licitacao/:id" element={<LicitacaoDetalhe />} />
             <Route path="/interesses" element={<Interesses />} />
-            {/* ...outras rotas... */}
-  <Route path="/licitacao/:id" element={<LicitacaoDetalhe />} />
-  <Route path="/acompanhamento/:id" element={<AcompanhamentoLicitacao />} />
+            <Route path="/licitacao/:id" element={<LicitacaoDetalhe />} />
+            <Route path="/acompanhamento/:id" element={<AcompanhamentoLicitacao />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </div>
       </div>
