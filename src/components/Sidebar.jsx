@@ -11,7 +11,7 @@ export default function Sidebar() {
         </Link>
 
         <Link to="/licitacoes" className="hover:text-blue-600">
-          Licitações
+          Licitações PNCP
         </Link>
 
         {/* ⭐ NOVO ITEM ADICIONADO */}
