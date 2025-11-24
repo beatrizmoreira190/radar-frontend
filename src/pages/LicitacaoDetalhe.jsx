@@ -283,9 +283,23 @@ export default function LicitacaoDetalhe() {
         >
           Voltar
         </button>
-        <button className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
-          Salvar licitação (em breve)
-        </button>
+        <button
+  className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+  onClick={async () => {
+    try {
+      const res = await axios.post(
+        `${API}/interesses/adicionar`,
+        null,
+        { params: { licitacao_id: id } }
+      );
+      alert(res.data.mensagem);
+    } catch (e) {
+      alert("Erro ao salvar.");
+    }
+  }}
+>
+  ⭐ Salvar licitação
+</button>
       </div>
     </Layout>
   );
