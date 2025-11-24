@@ -313,7 +313,7 @@ export default function LicitacaoDetalhe() {
 </button>
        <button
   className="px-4 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700"
-  onClick={() => navigate(`/acompanhamento/${id}`)}
+  onClick={() => navigate(`/acompanhamento/iniciar/${id}`)}
 >
   Acompanhar licitação
 </button>
