@@ -10,13 +10,8 @@ export default function Login() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   // 🔵 Sua logo (substituir por URL real)
-  const LOGO_URL = "https://i.ibb.co/G3HCf3yN/LOGO-RADAR-INTELIGENTE-removebg-preview.png";
-  <img
-  src={LOGO_URL}
-  alt="Radar Inteligente"
-  className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
- />
-className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
+  const LOGO_URL =
+    "https://i.ibb.co/G3HCf3yN/LOGO-RADAR-INTELIGENTE-removebg-preview.png";
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -35,15 +30,14 @@ className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0412CD] via-[#1E3AFF] to-[#65A8FF] p-4">
-
       <div className="backdrop-blur-xl bg-white/20 border border-white/30 rounded-3xl shadow-2xl p-10 w-full max-w-md animate-fadeIn">
-
+        
         {/* Logo */}
         <div className="flex justify-center mb-4">
           <img
             src={LOGO_URL}
             alt="Radar Inteligente"
-            className="w-20 h-20 object-contain drop-shadow-lg"
+            className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
           />
         </div>
 
@@ -58,7 +52,7 @@ className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
 
         {/* Formulário */}
         <form onSubmit={handleLogin} className="space-y-6">
-
+          
           {/* Email */}
           <div>
             <label className="text-sm text-white font-medium">Email</label>
