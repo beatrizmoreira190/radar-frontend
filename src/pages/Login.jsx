@@ -10,7 +10,13 @@ export default function Login() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   // 🔵 Sua logo (substituir por URL real)
-  const LOGO_URL = "https://i.ibb.co/p9jKDnB/LOGO-RADAR-INTELIGENTE.png";
+  const LOGO_URL = "https://i.ibb.co/G3HCf3yN/LOGO-RADAR-INTELIGENTE-removebg-preview.png";
+  <img
+  src={LOGO_URL}
+  alt="Radar Inteligente"
+  className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
+ />
+className="w-44 h-auto object-contain drop-shadow-xl mx-auto"
 
   const handleLogin = (e) => {
     e.preventDefault();
