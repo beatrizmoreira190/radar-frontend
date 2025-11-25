@@ -1,103 +1,104 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Sidebar from "./components/Sidebar";
 
+import PrivateRoute from "./components/PrivateRoute";
+
+import AppLayout from "./layouts/AppLayout";
+
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Licitacoes from "./pages/Licitacoes";
 import LicitacaoDetalhe from "./pages/LicitacaoDetalhe";
 import Interesses from "./pages/Interesses";
 import AcompanhamentoLicitacao from "./pages/AcompanhamentoLicitacao";
-import Login from "./pages/Login";
-import PrivateRoute from "./components/PrivateRoute";
 import Notificacoes from "./pages/Notificacoes";
 
-
 export default function App() {
-  const isLogged = !!localStorage.getItem("radar_token");
-
   return (
     <BrowserRouter>
-      <div className="flex">
-        
-        {/* Sidebar só aparece se estiver logado */}
-        {isLogged && <Sidebar />}
+      <Routes>
 
-        <div className="flex-1">
-          <Routes>
+        {/* Login: página pública */}
+        <Route path="/login" element={<Login />} />
 
-            {/* LOGIN (rota pública) */}
-            <Route path="/login" element={<Login />} />
+        {/* Rotas protegidas usando AppLayout */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
 
-            {/* ROTA HOME → Dashboard protegida */}
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
 
-            {/* Dashboard */}
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
+        <Route
+          path="/licitacoes"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <Licitacoes />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
 
-            {/* Licitações PNCP */}
-            <Route
-              path="/licitacoes"
-              element={
-                <PrivateRoute>
-                  <Licitacoes />
-                </PrivateRoute>
-              }
-            />
+        <Route
+          path="/licitacao/:id"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <LicitacaoDetalhe />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
 
-            {/* Detalhes */}
-            <Route
-              path="/licitacao/:id"
-              element={
-                <PrivateRoute>
-                  <LicitacaoDetalhe />
-                </PrivateRoute>
-              }
-            />
+        <Route
+          path="/interesses"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <Interesses />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
 
-            {/* Favoritos / Salvos */}
-            <Route
-              path="/interesses"
-              element={
-                <PrivateRoute>
-                  <Interesses />
-                </PrivateRoute>
-              }
-            />
+        <Route
+          path="/acompanhamento/:id"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <AcompanhamentoLicitacao />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
 
-            {/* Acompanhamento */}
-            <Route
-              path="/acompanhamento/:id"
-              element={
-                <PrivateRoute>
-                  <AcompanhamentoLicitacao />
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-  path="/notificacoes"
-  element={
-    <PrivateRoute>
-      <Notificacoes />
-    </PrivateRoute>
-  }
-/>
-          </Routes>
-        </div>
-      </div>
+        <Route
+          path="/notificacoes"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <Notificacoes />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
+
+      </Routes>
     </BrowserRouter>
   );
 }
