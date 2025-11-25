@@ -37,8 +37,8 @@ export default function Login() {
           {/* LOGO */}
           <img
             src={LOGO_URL}
-            alt="Radar Inteligente"
-            className="w-14 h-auto object-contain drop-shadow-md"
+            alt="Plataforma Inteligente da Radar de Licitações"
+            className="w-20 h-auto object-contain drop-shadow-md"
           />
 
           {/* Nome da plataforma */}
