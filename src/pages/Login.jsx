@@ -3,14 +3,19 @@ import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
+  // 🔵 Sua logo (substituir por URL real)
+  const LOGO_URL = "https://i.ibb.co/p9jKDnB/LOGO-RADAR-INTELIGENTE.png";
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // LOGIN DE DEMONSTRAÇÃO
+    // Login de demonstração
     const DEMO_EMAIL = "demo@radar.com";
     const DEMO_SENHA = "123456";
 
@@ -23,57 +28,86 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0412CD] via-blue-700 to-blue-400 p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0412CD] via-[#1E3AFF] to-[#65A8FF] p-4">
 
-        <h1 className="text-2xl font-bold text-center text-[#0412CD] mb-2">
+      <div className="backdrop-blur-xl bg-white/20 border border-white/30 rounded-3xl shadow-2xl p-10 w-full max-w-md animate-fadeIn">
+
+        {/* Logo */}
+        <div className="flex justify-center mb-4">
+          <img
+            src={LOGO_URL}
+            alt="Radar Inteligente"
+            className="w-20 h-20 object-contain drop-shadow-lg"
+          />
+        </div>
+
+        {/* Título */}
+        <h1 className="text-3xl font-extrabold text-center text-white tracking-tight mb-2">
           Radar Inteligente
         </h1>
 
-        <p className="text-center text-gray-500 mb-6">
-          Acesse a plataforma de monitoramento de licitações
+        <p className="text-center text-gray-100 mb-8">
+          Plataforma de monitoramento de licitações
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        {/* Formulário */}
+        <form onSubmit={handleLogin} className="space-y-6">
 
+          {/* Email */}
           <div>
-            <label className="text-sm text-gray-600">Email</label>
+            <label className="text-sm text-white font-medium">Email</label>
             <input
               type="email"
-              className="w-full border rounded-xl p-3 mt-1"
+              className="w-full border border-white/30 bg-white/10 text-white placeholder-white/60 rounded-xl p-3 mt-1 focus:ring-2 focus:ring-white focus:outline-none transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="demo@radar.com"
+              placeholder="email corporativo"
               required
             />
           </div>
 
+          {/* Senha */}
           <div>
-            <label className="text-sm text-gray-600">Senha</label>
-            <input
-              type="password"
-              className="w-full border rounded-xl p-3 mt-1"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="123456"
-              required
-            />
+            <label className="text-sm text-white font-medium">Senha</label>
+            <div className="relative">
+              <input
+                type={mostrarSenha ? "text" : "password"}
+                className="w-full border border-white/30 bg-white/10 text-white placeholder-white/60 rounded-xl p-3 mt-1 focus:ring-2 focus:ring-white focus:outline-none transition-all"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="sua senha"
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() => setMostrarSenha(!mostrarSenha)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+              >
+                {mostrarSenha ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
 
+          {/* Erro */}
           {erro && (
-            <p className="text-red-600 text-sm text-center">{erro}</p>
+            <p className="text-red-300 text-sm text-center -mt-3">
+              {erro}
+            </p>
           )}
 
+          {/* Botão */}
           <button
             type="submit"
-            className="w-full bg-[#0412CD] text-white py-3 rounded-xl font-semibold hover:bg-blue-900 transition"
+            className="w-full bg-white text-[#0412CD] py-3 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-0.5 hover:shadow-2xl active:scale-95"
           >
             Entrar
           </button>
         </form>
 
-        <p className="text-xs text-center text-gray-400 mt-6">
-          Login de demonstração • Editora #1
+        {/* Footer */}
+        <p className="text-xs text-center text-white/70 mt-6">
+          Acesso exclusivo • Modo demonstração • Editora #1
         </p>
       </div>
     </div>
