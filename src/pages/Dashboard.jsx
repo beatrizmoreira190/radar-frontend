@@ -201,20 +201,27 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} (${(percent * 100).toFixed(0)}%)`
-                    }
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`c-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
+  data={statusData}
+  cx="50%"
+  cy="50%"
+  outerRadius={85}
+  innerRadius={45}
+  paddingAngle={4}
+  dataKey="value"
+>
+  {statusData.map((entry, index) => (
+    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+  ))}
+</Pie>
+
+<Legend
+  layout="vertical"
+  verticalAlign="middle"
+  align="right"
+  iconType="circle"
+  formatter={(value) => <span className="text-sm text-gray-700">{value}</span>}
+/>
+
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
