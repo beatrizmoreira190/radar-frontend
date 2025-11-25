@@ -9,7 +9,7 @@ export default function Login() {
   const [erro, setErro] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  // Sua logo hospedada
+  // Logo do Radar
   const LOGO_URL = "https://i.ibb.co/G3HCf3yN/LOGO-RADAR-INTELIGENTE-removebg-preview.png";
 
   const handleLogin = (e) => {
@@ -28,34 +28,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0412CD] via-[#1E3AFF] to-[#65A8FF]">
+    <div className="min-h-screen flex flex-col">
 
-      {/* HEADER PRETO PREMIUM */}
-      <header className="bg-black/95 w-full py-3 shadow-lg border-b-4 border-[#0412CD]">
-        <div className="max-w-7xl mx-auto px-6 flex items-center gap-3">
-
-          {/* LOGO */}
-          <img
-            src={LOGO_URL}
-            alt="Plataforma Inteligente da Radar de Licitações"
-            className="w-20 h-auto object-contain drop-shadow-md"
-          />
-
-          {/* Nome da plataforma */}
-          <span className="text-white text-lg font-semibold tracking-wide">
-            Radar Inteligente
-          </span>
-
-        </div>
+      {/* HEADER BRANCO PREMIUM */}
+      <header className="bg-white w-full py-4 shadow-md flex justify-center">
+        <img
+          src={LOGO_URL}
+          alt="Radar Inteligente"
+          className="h-20 w-auto object-contain drop-shadow-lg"
+        />
       </header>
 
-      {/* CONTEÚDO CENTRAL */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      {/* FUNDO + CARD */}
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-[#0412CD] via-[#1E3AFF] to-[#65A8FF] p-4">
 
-        {/* CARD PREMIUM */}
         <div className="backdrop-blur-xl bg-white/20 border border-white/30 rounded-3xl shadow-2xl p-10 w-full max-w-md animate-fadeIn">
 
-          {/* TÍTULO */}
+          {/* Título */}
           <h1 className="text-3xl font-extrabold text-center text-white tracking-tight mb-2">
             Acessar plataforma
           </h1>
@@ -64,7 +53,7 @@ export default function Login() {
             Monitoramento inteligente de licitações públicas
           </p>
 
-          {/* FORM */}
+          {/* Formulário */}
           <form onSubmit={handleLogin} className="space-y-6">
 
             {/* Email */}
@@ -110,7 +99,7 @@ export default function Login() {
               </p>
             )}
 
-            {/* Botão Entrar */}
+            {/* Botão */}
             <button
               type="submit"
               className="w-full bg-white text-[#0412CD] py-3 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-0.5 hover:shadow-2xl active:scale-95"
@@ -123,6 +112,7 @@ export default function Login() {
           <p className="text-xs text-center text-white/70 mt-6">
             Acesso exclusivo • Modo demonstração • Editora #1
           </p>
+
         </div>
       </div>
     </div>
