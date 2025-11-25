@@ -8,6 +8,8 @@ import Interesses from "./pages/Interesses";
 import AcompanhamentoLicitacao from "./pages/AcompanhamentoLicitacao";
 import Login from "./pages/Login";
 import PrivateRoute from "./components/PrivateRoute";
+import Notificacoes from "./pages/Notificacoes";
+
 
 export default function App() {
   const isLogged = !!localStorage.getItem("radar_token");
@@ -84,7 +86,15 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-
+            
+            <Route
+  path="/notificacoes"
+  element={
+    <PrivateRoute>
+      <Notificacoes />
+    </PrivateRoute>
+  }
+/>
           </Routes>
         </div>
       </div>
